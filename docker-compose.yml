@@ -1,0 +1,30 @@
+# version: '3.9'
+# services:
+#   nestapp:
+#     container_name: nestapp
+#     image: francescoxx/nestapp:1.0.0
+#     build: .
+#     ports:
+#       - '3000:3000'
+#     environment:
+#       - DB_TYPE=postgres
+#       - DB_USER=postgres
+#       - DB_PASS=postgres
+#       - DB_NAME=ether
+#       - DB_PORT=5432
+#       - DB_HOST=db
+#     depends_on:
+#       - db
+#   db:
+#     container_name: db
+#     image: postgres:12
+#     environment:
+#       DB_USER: postgres
+#       DB_PASS: postgres
+#       DB_NAME: ether
+#     ports:
+#       - '5432:5432'
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+# volumes:
+#   pgdata: {}
