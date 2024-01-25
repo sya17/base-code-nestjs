@@ -15,7 +15,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
-  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -23,9 +22,10 @@ import {
 } from '@nestjs/swagger';
 import { BaseResponse } from 'src/common/interface/base-response.interface';
 import { User } from './entities/user.entity';
-import { PaginationDto } from 'src/models/pagination.model';
 import { BaseResponseSwagger } from 'src/models/base-response.model';
 import { APP_CONSTANT } from 'src/common/constants/general.constant';
+import { PageAndOrderDto } from 'src/models/page-and-order.model';
+import { queryFilters } from 'src/models/query-filters.model';
 
 @Controller(`${APP_CONSTANT.endpoint_version}User`)
 @ApiTags('User')
@@ -51,6 +51,12 @@ export class UserController {
     description: 'Endpoint for get masterdata User',
   })
   @ApiQuery({
+    name: 'filters',
+    type: [String],
+    description: 'filters',
+    required: false,
+  })
+  @ApiQuery({
     name: 'page',
     type: Number,
     description: 'Page number',
@@ -62,15 +68,26 @@ export class UserController {
     description: 'Limit size',
     required: false,
   })
+  @ApiQuery({
+    name: 'asc',
+    type: [String],
+    description: 'asc',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'desc',
+    type: [String],
+    description: 'desc',
+    required: false,
+  })
   @ApiOkResponse({ type: BaseResponseSwagger, isArray: true })
   @ApiBadRequestResponse({ type: BaseResponseSwagger<User>, isArray: false })
   async findAll(
-    @Query(ValidationPipe) paginationDto: PaginationDto,
+    @Query(new ValidationPipe({ transform: true })) filters: queryFilters,
+    @Query(ValidationPipe)
+    pageOrder: PageAndOrderDto,
   ): Promise<BaseResponse<User[]>> {
-    return await this.userService.findAll(
-      paginationDto.page,
-      paginationDto.limit,
-    );
+    return await this.userService.findAll(filters, pageOrder);
   }
 
   @Get(':id')

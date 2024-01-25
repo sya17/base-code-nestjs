@@ -8,12 +8,17 @@ import { Repository } from 'typeorm';
 import { MESSAGE_RESPONSE } from 'src/common/constants/message.constant';
 import { CommonGeneric } from 'src/common/util/common.util';
 import { CustomBadRequestException } from 'src/common/exceptions/custom-bad-request.exception';
+import { PageAndOrderDto } from 'src/models/page-and-order.model';
+import { queryFilters } from 'src/models/query-filters.model';
+import { BuildCriteria } from 'src/common/util/build-criteria.util';
+import { FilterCriteriaUtil } from 'src/common/util/filter-criteria.util';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private repo: Repository<User>,
     private common: CommonGeneric,
+    private userFilterCriteria: FilterCriteriaUtil<User>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<BaseResponse<User>> {
@@ -33,21 +38,31 @@ export class UserService {
   }
 
   async findAll(
-    pageNumber: number = 1,
-    pageSize: number = 10,
+    filters: queryFilters,
+    pageOrder: PageAndOrderDto,
   ): Promise<BaseResponse<User[]>> {
+    let option = this.userFilterCriteria.filter(
+      this.common.extractFilter(filters.filters),
+      pageOrder,
+    );
+
+    console.log('option', option);
+
     try {
-      const [result, totalItems] = await this.repo.findAndCount({
-        skip: (pageNumber - 1) * pageSize,
-        take: pageSize,
-      });
+      const [result, totalItems] = await this.repo.findAndCount(option);
       return {
         statusCode: HttpStatus.OK,
         message: MESSAGE_RESPONSE.OK,
-        pagination: this.common.getPagination(pageNumber, pageSize, totalItems),
+        pagination: this.common.getPagination(
+          pageOrder.page,
+          pageOrder.limit,
+          totalItems,
+        ),
         data: result,
       };
     } catch (error) {
+      console.log('Error ', error);
+
       throw new CustomBadRequestException('Error ', error);
     }
   }
