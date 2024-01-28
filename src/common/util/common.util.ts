@@ -32,9 +32,13 @@ export class CommonGeneric {
   }
 
   extractFilter<T>(filters): FilterCriteriaDto<T>[] {
+    console.log('filters', filters);
     let criteriaList: FilterCriteriaDto<T>[] = [];
+    if (!filters) {
+      return criteriaList;
+    }
 
-    if (filters && Array.isArray(filters)) {
+    if (Array.isArray(filters)) {
       filters.forEach((element, index) => {
         console.log(`${index} element`, element);
         criteriaList.push(this.buildFilterCriteria(element));
@@ -43,7 +47,6 @@ export class CommonGeneric {
       criteriaList.push(this.buildFilterCriteria(filters));
     }
     console.log('criteriaList', criteriaList);
-
     return criteriaList;
   }
 
@@ -52,24 +55,21 @@ export class CommonGeneric {
     let patternGroup: RegExp = /(AND|OR)\|(\[.*?\])/;
     const matchGroup = element.match(patternGroup);
     if (matchGroup) {
+      console.log('GROUP');
       // Group
       let groupOperator: string = matchGroup[1];
       let groupValue = matchGroup[2];
-      console.log('groupOperator', groupOperator);
-      console.log('groupValue', groupValue);
-
       const parts = groupValue.slice(1, -1).split(',');
-
       return {
         connector: groupOperator,
         group: this.extractFilter(parts),
       };
     } else {
-      // Alone
-      // let regexPatternFilter = /(\w+)\|(\w+)([!=<>]+|>=|<=|=)(\w+)/;
-      // let regexPatternFilter = /(\w+)\|(\w+)([!=<>]+|>=|<=|=)(\[\w+-\w+\]|\w+)/;
-      let regexPatternFilter =
-        /(\w+)\|(\w+)([!=<>]+|>=|<=|=)(\[\w+(?:,\w+)*\]|\w+)/;
+      console.log('SINGLE');
+      // Single
+      let regexPatternFilter = element.includes('[')
+        ? /(\w+)\|(\w+)([!=<>]+|>=|<=|=)(\[\w+(?:,\w+)*\]|\w+)/
+        : /(\w+)\|(\w+)([!=<>]+|>=|<=|=)(\w+)/;
       const match = element.match(regexPatternFilter);
       if (match) {
         let connector = match[1];
@@ -82,6 +82,7 @@ export class CommonGeneric {
           operator,
           value,
         );
+
         return {
           connector: connector,
           operator: operatorSpecial ?? operator,
